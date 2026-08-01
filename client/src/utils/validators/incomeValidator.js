@@ -1,0 +1,2 @@
+// Keeps client-side form feedback consistent with the server validation contract.
+export function validateIncome(values) { if (!values.category) return 'Please select an income category.'; if (!values.amount || Number(values.amount) <= 0) return 'Amount must be greater than 0.'; if (!values.date) return 'Please select a date.'; if (values.description.trim().length > 250) return 'Description cannot exceed 250 characters.'; return ''; }
