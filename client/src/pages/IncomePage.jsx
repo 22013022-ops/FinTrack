@@ -9,6 +9,11 @@ const categories = ['Salary', 'Freelancing', 'Business', 'Investments', 'Gift', 
 const initialForm = () => ({ category: '', amount: '', description: '', date: new Date().toISOString().slice(0, 10) });
 const initialFilters = { categories: [], description: '', amountMin: '', amountMax: '', dateFrom: '', dateTo: '', sort: 'latest' };
 const monthKey = (date) => date.toISOString().slice(0, 7);
+const getStoredMonth = (key, fallback) => {
+  if (typeof window === 'undefined') return fallback;
+  const storedMonth = window.localStorage.getItem(key);
+  return storedMonth && /^\d{4}-(0[1-9]|1[0-2])$/.test(storedMonth) ? storedMonth : fallback;
+};
 const shiftMonth = (month, direction) => {
   const [year, monthNumber] = month.split('-').map(Number);
   const totalMonths = year * 12 + (monthNumber - 1) + direction;
@@ -19,7 +24,7 @@ const shiftMonth = (month, direction) => {
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export default function IncomePage() {
-  const [month, setMonth] = useState(monthKey(new Date()));
+  const [month, setMonth] = useState(() => getStoredMonth('fintrack_income_month', monthKey(new Date())));
   const [records, setRecords] = useState([]);
   const [filters, setFilters] = useState(initialFilters);
   const [loading, setLoading] = useState(true);
@@ -52,6 +57,10 @@ export default function IncomePage() {
     const requestId = window.setTimeout(load, 0);
     return () => window.clearTimeout(requestId);
   }, [load]);
+
+  useEffect(() => {
+    window.localStorage.setItem('fintrack_income_month', month);
+  }, [month]);
 
   useEffect(() => {
     if (!toast) return undefined;

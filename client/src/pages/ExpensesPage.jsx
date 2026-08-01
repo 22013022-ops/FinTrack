@@ -8,6 +8,11 @@ import { validateExpense, expenseCategories } from '../utils/validators/expenseV
 const initialForm = () => ({ category: '', amount: '', description: '', date: new Date().toISOString().slice(0, 10) });
 const initialFilters = { categories: [], description: '', amountMin: '', amountMax: '', dateFrom: '', dateTo: '', sort: 'latest' };
 const monthKey = (date) => date.toISOString().slice(0, 7);
+const getStoredMonth = (key, fallback) => {
+  if (typeof window === 'undefined') return fallback;
+  const storedMonth = window.localStorage.getItem(key);
+  return storedMonth && /^\d{4}-(0[1-9]|1[0-2])$/.test(storedMonth) ? storedMonth : fallback;
+};
 const shiftMonth = (month, direction) => {
   const [year, monthNumber] = month.split('-').map(Number);
   const totalMonths = year * 12 + (monthNumber - 1) + direction;
@@ -18,7 +23,7 @@ const shiftMonth = (month, direction) => {
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export default function ExpensesPage() {
-  const [month, setMonth] = useState(monthKey(new Date()));
+  const [month, setMonth] = useState(() => getStoredMonth('fintrack_expenses_month', monthKey(new Date())));
   const [records, setRecords] = useState([]);
   const [filters, setFilters] = useState(initialFilters);
   const [loading, setLoading] = useState(true);
@@ -50,6 +55,10 @@ export default function ExpensesPage() {
     const requestId = window.setTimeout(load, 0);
     return () => window.clearTimeout(requestId);
   }, [load]);
+
+  useEffect(() => {
+    window.localStorage.setItem('fintrack_expenses_month', month);
+  }, [month]);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -328,7 +337,73 @@ function NoMatch({ onClear }) {
 function FilterMenu({ activeView, setActiveView, filters, onChange, onApply, onClose }) {
   const items = [['categories', 'Category', Tag], ['description', 'Description', Type], ['amount', 'Amount', IndianRupee], ['date', 'Date', CalendarDays]];
   const title = items.find(([key]) => key === activeView)?.[1];
-  return <div className="filter-menu"><aside>{items.map(([key, label, Icon]) => <button type="button" key={key} onClick={() => setActiveView(key)} className={activeView === key ? 'active' : ''}><Icon size={18}/><span>{label}</span>{(key === 'categories' && filters.categories.length) || (key === 'description' && filters.description) || (key === 'amount' && (filters.amountMin || filters.amountMax)) || (key === 'date' && (filters.dateFrom || filters.dateTo)) ? <i>✓</i> : null}</button>)}</aside><div className="filter-menu-content"><header><div><p className="eyebrow">FILTER EXPENSES</p><h3>{title}</h3></div><button type="button" onClick={onClose}><X size={18}/></button></header>{activeView === 'categories' && <div className="filter-category-list"><button type="button" className={!filters.categories.length ? 'selected' : ''} onClick={() => onChange('categories', [])}>All categories</button>{expenseCategories.map((category) => <button type="button" key={category} className={filters.categories.includes(category) ? 'selected' : ''} onClick={() => onChange('categories', filters.categories.includes(category) ? filters.categories.filter((item) => item !== category) : [...filters.categories, category])}><span>{category}</span>{filters.categories.includes(category) && <b>✓</b>}</button>)}</div>}{activeView === 'description' && <label className="menu-field">Description<input autoFocus value={filters.description} onChange={(e) => onChange('description', e.target.value)} placeholder="Match description" /></label>}{activeView === 'amount' && <div className="menu-field-grid"><label className="menu-field">Min amount<input type="number" min="0" value={filters.amountMin} onChange={(e) => onChange('amountMin', e.target.value)} placeholder="0" /></label><label className="menu-field">Max amount<input type="number" min="0" value={filters.amountMax} onChange={(e) => onChange('amountMax', e.target.value)} placeholder="No limit" /></label></div>}{activeView === 'date' && <div className="menu-field-grid"><label className="menu-field">Date from<input type="date" value={filters.dateFrom} onChange={(e) => onChange('dateFrom', e.target.value)} /></label><label className="menu-field">Date to<input type="date" value={filters.dateTo} onChange={(e) => onChange('dateTo', e.target.value)} /></label></div>}</div></div>;
+  return (
+    <div className="filter-menu">
+      <aside>
+        {items.map(([key, label, Icon]) => (
+          <button type="button" key={key} onClick={() => setActiveView(key)} className={activeView === key ? 'active' : ''}>
+            <Icon size={18} />
+            <span>{label}</span>
+            {(key === 'categories' && filters.categories.length) || (key === 'description' && filters.description) || (key === 'amount' && (filters.amountMin || filters.amountMax)) || (key === 'date' && (filters.dateFrom || filters.dateTo)) ? <i>✓</i> : null}
+          </button>
+        ))}
+      </aside>
+      <div className="filter-menu-content">
+        <header>
+          <div>
+            <p className="eyebrow">FILTER EXPENSES</p>
+            <h3>{title}</h3>
+          </div>
+          <button type="button" onClick={onClose}><X size={18} /></button>
+        </header>
+        {activeView === 'categories' && (
+          <div className="filter-category-list">
+            <button type="button" className={!filters.categories.length ? 'selected' : ''} onClick={() => onChange('categories', [])}>All categories</button>
+            {expenseCategories.map((category) => (
+              <button type="button" key={category} className={filters.categories.includes(category) ? 'selected' : ''} onClick={() => onChange('categories', filters.categories.includes(category) ? filters.categories.filter((item) => item !== category) : [...filters.categories, category])}>
+                <span>{category}</span>
+                {filters.categories.includes(category) && <b>✓</b>}
+              </button>
+            ))}
+          </div>
+        )}
+        {activeView === 'description' && (
+          <label className="menu-field">
+            Description
+            <input autoFocus value={filters.description} onChange={(e) => onChange('description', e.target.value)} placeholder="Match description" />
+          </label>
+        )}
+        {activeView === 'amount' && (
+          <div className="menu-field-grid">
+            <label className="menu-field">
+              Min amount
+              <input type="number" min="0" value={filters.amountMin} onChange={(e) => onChange('amountMin', e.target.value)} placeholder="0" />
+            </label>
+            <label className="menu-field">
+              Max amount
+              <input type="number" min="0" value={filters.amountMax} onChange={(e) => onChange('amountMax', e.target.value)} placeholder="No limit" />
+            </label>
+          </div>
+        )}
+        {activeView === 'date' && (
+          <div className="menu-field-grid">
+            <label className="menu-field">
+              Date from
+              <input type="date" value={filters.dateFrom} onChange={(e) => onChange('dateFrom', e.target.value)} />
+            </label>
+            <label className="menu-field">
+              Date to
+              <input type="date" value={filters.dateTo} onChange={(e) => onChange('dateTo', e.target.value)} />
+            </label>
+          </div>
+        )}
+        <footer>
+          <button type="button" className="text-button" onClick={onClose}>Cancel</button>
+          <Button type="button" onClick={onApply}>Apply filters</Button>
+        </footer>
+      </div>
+    </div>
+  );
 }
 
 function ExpenseModal({ expense, onClose, onSave }) {

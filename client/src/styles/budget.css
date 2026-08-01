@@ -1,0 +1,52 @@
+.budget-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px;padding:22px}
+
+.budget-card{
+	background:linear-gradient(180deg,#ffffff,#fbfcff);
+	border:1px solid rgba(17,34,80,0.06);
+	border-radius:16px;
+	padding:22px;
+	box-shadow:0 12px 30px rgba(17,34,80,0.08);
+	display:flex;
+	flex-direction:column;
+	gap:16px;
+	transition:transform .18s ease,box-shadow .18s ease;
+}
+.budget-card:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(17,34,80,0.12)}
+.budget-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.budget-card-title{font-size:18px;font-weight:800;color:#0f2a4a;margin:0}
+.budget-card-subtitle{font-size:12px;color:#7a8aa3;margin:6px 0 0}
+.budget-card-amount{font-weight:900;color:#0b2a4a;font-size:22px}
+
+.budget-primary{display:flex;flex-direction:column;gap:6px}
+.budget-primary .label{font-size:12px;color:#7a8aa3}
+.budget-primary .value{font-size:22px;font-weight:900;color:#0b2a4a}
+
+.budget-metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;color:#4b5b72;font-size:13px;padding-top:8px;border-top:1px solid rgba(16,36,70,0.04)}
+.budget-metrics > div{display:flex;flex-direction:column;gap:6px}
+.budget-metrics .metric-label{font-size:12px;color:#7a8aa3}
+.budget-metrics .metric-value{font-size:16px;font-weight:800;color:#0b2a4a}
+
+.budget-details{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:8px}
+
+.budget-usage-row{display:flex;align-items:center;gap:12px;padding-top:8px}
+.budget-percentage{font-size:20px;font-weight:900;color:#0b2a4a;min-width:64px;text-align:left}
+.budget-status{font-size:13px;padding:6px 10px;border-radius:999px;font-weight:700}
+.budget-status.budget-safe{background:#ecf9f0;color:#047c3e}
+.budget-status.budget-warning{background:#fff7eb;color:#b45309}
+.budget-status.budget-danger{background:#fff1f2;color:#c92a2a}
+
+.progress-bar{height:14px;background:linear-gradient(90deg,#f1f5f9,#f6f8fa);border-radius:12px;overflow:hidden}
+.progress-fill{height:100%;border-radius:12px;transition:width .6s cubic-bezier(.2,.9,.2,1);box-shadow:inset 0 -4px 8px rgba(255,255,255,0.08)}
+.progress-fill.budget-safe{background:linear-gradient(90deg,#16a34a,#33d07f)}
+.progress-fill.budget-warning{background:linear-gradient(90deg,#f59e0b,#ffc857)}
+.progress-fill.budget-danger{background:linear-gradient(90deg,#ef4444,#ff7a7a)}
+
+.budget-card-actions{display:flex;justify-content:flex-end;gap:10px;align-items:center;padding-top:6px}
+.budget-card-actions button{border:0;background:transparent;color:#475968;cursor:pointer;padding:8px;border-radius:10px;transition:background .12s ease,transform .12s ease}
+.budget-card-actions button:hover{background:rgba(17,34,80,0.04);transform:translateY(-2px)}
+
+.budget-card .delete-button svg{color:#c92a2a}
+.budget-card .edit-button svg{color:#0f4a78}
+
+/* compact responsive tweaks */
+@media(max-width:760px){.budget-cards-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;padding:16px}.budget-card-amount{font-size:20px}.budget-percentage{font-size:18px}}
