@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const connectDatabase = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const incomeRoutes = require('./routes/incomeRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 dotenv.config();
@@ -18,6 +19,7 @@ app.use(express.json({ limit: '10kb' }));
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/income', incomeRoutes);
+app.use('/api/expenses', expenseRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
