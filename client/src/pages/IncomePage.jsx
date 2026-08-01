@@ -16,6 +16,7 @@ const shiftMonth = (month, direction) => {
   const nextMonth = (totalMonths % 12) + 1;
   return `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
 };
+const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export default function IncomePage() {
   const [month, setMonth] = useState(monthKey(new Date()));
@@ -27,6 +28,12 @@ export default function IncomePage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterView, setFilterView] = useState('categories');
   const [draftFilters, setDraftFilters] = useState(initialFilters);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const [selectedYear, selectedMonth] = month.split('-').map(Number);
+  const years = Array.from({ length: 17 }, (_, index) => new Date().getFullYear() - 8 + index);
+  const selectMonth = (monthNumber) => { setPage(1); setMonth(`${selectedYear}-${String(monthNumber).padStart(2, '0')}`); };
+  const selectYear = (year) => { setPage(1); setMonth(`${year}-${String(selectedMonth).padStart(2, '0')}`); };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -63,6 +70,9 @@ export default function IncomePage() {
       && (!filters.dateTo || date <= new Date(`${filters.dateTo}T23:59:59.999`));
   }), [records, filters]);
   const viewSummary = useMemo(() => calculateIncomeSummary(filteredRecords), [filteredRecords]);
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedRecords = filteredRecords.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const appliedFilterChips = [];
   if (filters.categories.length) appliedFilterChips.push({ label: `Categories: ${filters.categories.join(', ')}`, key: 'categories' });
@@ -74,11 +84,11 @@ export default function IncomePage() {
   const isEmptyMonth = !loading && filteredRecords.length === 0 && !hasFilters;
   const isNoMatch = !loading && filteredRecords.length === 0 && hasFilters;
 
-  const handleFilterChange = (key, value) => setFilters((current) => ({ ...current, [key]: value }));
-  const handleClearFilters = () => setFilters(initialFilters);
+  const handleFilterChange = (key, value) => { setPage(1); setFilters((current) => ({ ...current, [key]: value })); };
+  const handleClearFilters = () => { setPage(1); setFilters(initialFilters); };
   const openFilters = () => { setDraftFilters(filters); setFilterOpen(true); };
-  const applyFilters = () => { setFilters(draftFilters); setFilterOpen(false); };
-  const removeFilter = (key) => setFilters((current) => key === 'amount' ? { ...current, amountMin: '', amountMax: '' } : key === 'date' ? { ...current, dateFrom: '', dateTo: '' } : key === 'categories' ? { ...current, categories: [] } : { ...current, [key]: '' });
+  const applyFilters = () => { setPage(1); setFilters(draftFilters); setFilterOpen(false); };
+  const removeFilter = (key) => { setPage(1); setFilters((current) => key === 'amount' ? { ...current, amountMin: '', amountMax: '' } : key === 'date' ? { ...current, dateFrom: '', dateTo: '' } : key === 'categories' ? { ...current, categories: [] } : { ...current, [key]: '' }); };
 
   const save = async (values, id) => {
     const error = validateIncome(values);
@@ -117,11 +127,14 @@ export default function IncomePage() {
         <Button className="primary-action" onClick={() => setModal({ type: 'form', income: null })}>
           <CirclePlus size={19} /> Add income
         </Button>
-        <div className="month-toolbar">
-          <button type="button" onClick={() => setMonth((current) => shiftMonth(current, -1))} aria-label="Previous month"><ChevronLeft size={20} /></button>
-          <strong>{getMonthLabel(month)}</strong>
-          <button type="button" onClick={() => setMonth((current) => shiftMonth(current, 1))} aria-label="Next month"><ChevronRight size={20} /></button>
-          <button type="button" className="refresh-button" onClick={load} aria-label="Refresh income"><RefreshCw size={17} /></button>
+        <div className="month-selection-row">
+          <div className="month-heading"><span>INCOME PERIOD</span><strong>{getMonthLabel(month)}</strong></div>
+          <div className="month-toolbar">
+            <button type="button" onClick={() => { setPage(1); setMonth((current) => shiftMonth(current, -1)); }} aria-label="Previous month"><ChevronLeft size={20} /></button>
+            <div className="month-picker-wrap" aria-label="Select month and year"><CalendarDays size={16} /><select aria-label="Select month" value={selectedMonth} onChange={(event) => selectMonth(Number(event.target.value))}>{monthNames.map((name, index) => <option value={index + 1} key={name}>{name}</option>)}</select><select aria-label="Select year" value={selectedYear} onChange={(event) => selectYear(Number(event.target.value))}>{years.map((year) => <option key={year}>{year}</option>)}</select></div>
+            <button type="button" onClick={() => { setPage(1); setMonth((current) => shiftMonth(current, 1)); }} aria-label="Next month"><ChevronRight size={20} /></button>
+            <button type="button" className="refresh-button" onClick={load} aria-label="Refresh income"><RefreshCw size={17} /></button>
+          </div>
         </div>
       </section>
 
@@ -235,7 +248,7 @@ export default function IncomePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRecords.map((record) => (
+                  {paginatedRecords.map((record) => (
                     <tr key={record._id}>
                       <td>{formatDate(record.date)}</td>
                       <td><span className="category-pill">{record.category}</span></td>
@@ -252,6 +265,7 @@ export default function IncomePage() {
                 </tbody>
               </table>
             </div>
+            {filteredRecords.length > pageSize && <nav className="table-pagination" aria-label="Income table pagination"><button type="button" disabled={currentPage === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>Previous</button><span>Page <b>{currentPage}</b> of <b>{totalPages}</b></span><button type="button" disabled={currentPage === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>Next</button></nav>}
 
             <section className="filter-summary-cards">
               <header>
