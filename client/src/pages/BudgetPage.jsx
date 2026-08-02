@@ -22,7 +22,28 @@ const shiftMonth = (month, direction) => {
   return `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
 };
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const initialFilters = { categories: [], status: 'all', sort: 'highestBudget' };
+const initialFilters = { categories: [], status: [], sort: 'highestBudget' };
+
+const getStatusLabel = (value) => {
+  if (value === 'within') return 'Within budget';
+  if (value === 'near') return 'Near limit';
+  if (value === 'exceeded') return 'Exceeded';
+  return value;
+};
+
+const normalizeStatusFilter = (status) => {
+  if (Array.isArray(status)) return status;
+  if (!status) return [];
+  return [status];
+};
+
+const toggleStatusSelection = (currentStatus, value) => {
+  const statusArray = normalizeStatusFilter(currentStatus);
+  if (value === 'all') return [];
+  return statusArray.includes(value)
+    ? statusArray.filter((item) => item !== value)
+    : [...statusArray, value];
+};
 
 export default function BudgetPage() {
   const [month, setMonth] = useState(() => getStoredMonth('fintrack_budget_month', monthKey(new Date())));
@@ -42,11 +63,33 @@ export default function BudgetPage() {
   const selectMonth = (monthNumber) => { setPage(1); setMonth(`${selectedYear}-${String(monthNumber).padStart(2, '0')}`); };
   const selectYear = (year) => { setPage(1); setMonth(`${year}-${String(selectedMonth).padStart(2, '0')}`); };
 
-  const handleFilterChange = (key, value) => { setPage(1); setFilters((current) => ({ ...current, [key]: value })); };
+  const handleFilterChange = (key, value) => {
+    setPage(1);
+    if (key === 'status') {
+      setFilters((current) => ({ ...current, status: toggleStatusSelection(current.status, value) }));
+    } else {
+      setFilters((current) => ({ ...current, [key]: value }));
+    }
+  };
   const handleClearFilters = () => { setPage(1); setFilters(initialFilters); };
   const openFilters = () => { setDraftFilters(filters); setFilterOpen(true); };
   const applyFilters = () => { setPage(1); setFilters(draftFilters); setFilterOpen(false); };
-  const removeFilter = (key) => { setPage(1); setFilters((current) => (key === 'categories' ? { ...current, categories: [] } : key === 'status' ? { ...current, status: 'all' } : current)); };
+  const handleDraftFilterChange = (key, value) => {
+    setDraftFilters((current) => {
+      if (key === 'status') {
+        return { ...current, status: toggleStatusSelection(current.status, value) };
+      }
+      return { ...current, [key]: value };
+    });
+  };
+  const removeFilter = (key) => {
+    setPage(1);
+    setFilters((current) => {
+      if (key === 'categories') return { ...current, categories: [] };
+      if (key === 'status') return { ...current, status: [] };
+      return current;
+    });
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -99,16 +142,17 @@ export default function BudgetPage() {
     });
   }, [budgets, expensesByCategory, month]);
 
+  const normalizedStatus = normalizeStatusFilter(filters.status);
   const appliedFilterChips = [];
   if (filters.categories.length) appliedFilterChips.push({ label: `Categories: ${filters.categories.join(', ')}`, key: 'categories' });
-  if (filters.status && filters.status !== 'all') appliedFilterChips.push({ label: `Status: ${filters.status === 'within' ? 'Within budget' : filters.status === 'near' ? 'Near limit' : 'Exceeded'}`, key: 'status' });
+  if (normalizedStatus.length) appliedFilterChips.push({ label: `Status: ${normalizedStatus.map(getStatusLabel).join(', ')}`, key: 'status' });
 
   const hasFilters = appliedFilterChips.length > 0;
   const filteredBudgets = useMemo(() => {
     const matches = budgetCards.filter((budget) => {
       const matchesCategory = !filters.categories.length || filters.categories.includes(budget.category);
       const status = budget.usagePercentage >= 100 ? 'exceeded' : budget.usagePercentage >= 80 ? 'near' : 'within';
-      const matchesStatus = !filters.status || filters.status === 'all' || (filters.status === 'within' && status === 'within') || (filters.status === 'near' && status === 'near') || (filters.status === 'exceeded' && status === 'exceeded');
+      const matchesStatus = !normalizedStatus.length || normalizedStatus.includes('all') || normalizedStatus.includes(status);
       return matchesCategory && matchesStatus;
     });
 
@@ -183,7 +227,7 @@ export default function BudgetPage() {
       <section className="income-query-bar">
         <div className="filter-menu-wrap">
           <button type="button" className={`filter-menu-trigger ${filterOpen ? 'is-open' : ''}`} onClick={() => filterOpen ? setFilterOpen(false) : openFilters()}><SlidersHorizontal size={18} /> Filters {hasFilters && <b>{appliedFilterChips.length}</b>}</button>
-          {filterOpen && <FilterMenu activeView={filterView} setActiveView={setFilterView} filters={draftFilters} onChange={(key, value) => setDraftFilters((current) => ({ ...current, [key]: value }))} onApply={applyFilters} onClose={() => setFilterOpen(false)} />}
+          {filterOpen && <FilterMenu activeView={filterView} setActiveView={setFilterView} filters={draftFilters} onChange={handleDraftFilterChange} onApply={applyFilters} onClose={() => setFilterOpen(false)} />}
         </div>
         <div className="filter-chips">{appliedFilterChips.map((chip) => <button key={chip.key} type="button" onClick={() => removeFilter(chip.key)} className="filter-chip">{chip.label} <span>×</span></button>)}</div>
         <div className="sort-actions">
@@ -200,6 +244,11 @@ export default function BudgetPage() {
               <option value="categoryDesc">Category (Z–A)</option>
             </select>
           </label>
+          {hasFilters && (
+            <button type="button" className="text-button clear-filters" onClick={handleClearFilters}>
+              Clear filters
+            </button>
+          )}
         </div>
       </section>
 
@@ -393,14 +442,29 @@ function FilterMenu({ activeView, setActiveView, filters, onChange, onApply, onC
             ))}
           </div>
         )}
-        {activeView === 'status' && (
-          <div className="filter-category-list">
-            <button type="button" className={filters.status === 'all' ? 'selected' : ''} onClick={() => onChange('status', 'all')}>All</button>
-            <button type="button" className={filters.status === 'within' ? 'selected' : ''} onClick={() => onChange('status', 'within')}>Within budget</button>
-            <button type="button" className={filters.status === 'near' ? 'selected' : ''} onClick={() => onChange('status', 'near')}>Near limit</button>
-            <button type="button" className={filters.status === 'exceeded' ? 'selected' : ''} onClick={() => onChange('status', 'exceeded')}>Exceeded</button>
-          </div>
-        )}
+        {activeView === 'status' && (() => {
+          const normalizedStatus = normalizeStatusFilter(filters.status);
+          return (
+            <div className="filter-category-list">
+              <button type="button" className={!normalizedStatus.length ? 'selected' : ''} onClick={() => onChange('status', 'all')}>
+                All
+                {!normalizedStatus.length && <b>✓</b>}
+              </button>
+              <button type="button" className={normalizedStatus.includes('within') ? 'selected' : ''} onClick={() => onChange('status', 'within')}>
+                Within budget
+                {normalizedStatus.includes('within') && <b>✓</b>}
+              </button>
+              <button type="button" className={normalizedStatus.includes('near') ? 'selected' : ''} onClick={() => onChange('status', 'near')}>
+                Near limit
+                {normalizedStatus.includes('near') && <b>✓</b>}
+              </button>
+              <button type="button" className={normalizedStatus.includes('exceeded') ? 'selected' : ''} onClick={() => onChange('status', 'exceeded')}>
+                Exceeded
+                {normalizedStatus.includes('exceeded') && <b>✓</b>}
+              </button>
+            </div>
+          );
+        })()}
         <footer>
           <button type="button" className="text-button" onClick={onClose}>Cancel</button>
           <Button type="button" onClick={onApply}>Apply filters</Button>
