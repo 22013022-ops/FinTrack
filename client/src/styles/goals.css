@@ -40,8 +40,8 @@
 .goals-overview-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;border-bottom:1px solid rgba(17,34,80,0.08);padding-bottom:16px}
 .goals-overview-header h2{margin:0;font-size:1.35rem;color:#0f2a4a}
 .goals-overview-header p{margin:8px 0 0;color:#5a6d86;max-width:720px;line-height:1.7}
-.goals-page .budget-cards-grid{display:grid;grid-template-columns:repeat(auto-fit,360px);justify-content:start;gap:35px;padding:0;margin:0;max-width:100%}
-.goals-page .budget-card{width:380px;padding:22px;border-radius:22px;display:flex;flex-direction:column;gap:18px;box-shadow:0 18px 38px rgba(17,34,80,0.08);background:linear-gradient(180deg,#ffffff,#fbfcff);transition:transform .18s ease,box-shadow .18s ease}
+.goals-page .budget-cards-grid{display:grid;grid-template-columns:repeat(3,340px);justify-content:start;gap:30px 25px;padding:0;margin:0;max-width:100%}
+.goals-page .budget-card{width:340px;padding:22px;border-radius:22px;display:flex;flex-direction:column;gap:18px;box-shadow:0 18px 38px rgba(17,34,80,0.08);background:linear-gradient(180deg,#ffffff,#fbfcff);transition:transform .18s ease,box-shadow .18s ease}
 .goals-page .budget-card-actions{display:flex;justify-content:flex-end;gap:10px;align-items:center;padding-top:6px;margin-top:auto}
 .goals-page .budget-card:hover{transform:translateY(-4px);box-shadow:0 22px 44px rgba(17,34,80,0.12)}
 .goals-page .budget-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
