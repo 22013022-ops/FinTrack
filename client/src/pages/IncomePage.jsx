@@ -166,58 +166,6 @@ export default function IncomePage() {
         </article>
       </section>
 
-      <section className="filters-section">
-        <div className="filters-grid">
-          <label>
-            Category
-            <select value={filters.category} onChange={(e) => handleFilterChange('category', e.target.value)}>
-              <option value="">All categories</option>
-              {categories.map((category) => <option key={category}>{category}</option>)}
-            </select>
-          </label>
-          <label>
-            Description
-            <input type="text" value={filters.description} onChange={(e) => handleFilterChange('description', e.target.value)} placeholder="Match description" />
-          </label>
-          <label>
-            Min amount
-            <input type="number" min="0" value={filters.amountMin} onChange={(e) => handleFilterChange('amountMin', e.target.value)} placeholder="0" />
-          </label>
-          <label>
-            Max amount
-            <input type="number" min="0" value={filters.amountMax} onChange={(e) => handleFilterChange('amountMax', e.target.value)} placeholder="0" />
-          </label>
-          <label>
-            Date from
-            <input type="date" value={filters.dateFrom} onChange={(e) => handleFilterChange('dateFrom', e.target.value)} />
-          </label>
-          <label>
-            Date to
-            <input type="date" value={filters.dateTo} onChange={(e) => handleFilterChange('dateTo', e.target.value)} />
-          </label>
-        </div>
-        <div className="filters-actions">
-          <div className="filter-chips">
-            {appliedFilterChips.map((chip) => (
-              <button key={chip.key} type="button" onClick={() => handleFilterChange(chip.key, '')} className="filter-chip">
-                {chip.label} <span>×</span>
-              </button>
-            ))}
-          </div>
-          <div className="sort-actions">
-            <label>
-              Sort By
-              <select value={filters.sort} onChange={(e) => handleFilterChange('sort', e.target.value)}>
-                <option value="latest">Latest</option>
-                <option value="oldest">Oldest</option>
-                <option value="highest">Highest Amount</option>
-                <option value="lowest">Lowest Amount</option>
-              </select>
-            </label>
-            {hasFilters && <button type="button" className="text-button clear-filters" onClick={handleClearFilters}>Clear filters</button>}
-          </div>
-        </div>
-      </section>
 
       <section className="income-query-bar">
         <div className="filter-menu-wrap">
