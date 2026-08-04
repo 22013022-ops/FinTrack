@@ -90,7 +90,10 @@ export default function IncomeSourcesChart({ data }) {
                     );
                   })}
                 </Pie>
-                <Tooltip content={<ChartTooltip formatter={(value) => formatCurrency(value)} />} />
+                <Tooltip
+                  isAnimationActive={false}
+                  content={<ChartTooltip formatter={(value) => formatCurrency(value)} />}
+                />
               </PieChart>
             </ResponsiveContainer>
             <div className="income-chart-center">
