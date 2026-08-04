@@ -2,7 +2,7 @@ export default function ChartTooltip({ active, payload, formatter }) {
   if (!active || !payload?.length) return null;
 
   const [item] = payload;
-  const percent = item?.percent != null ? Math.round(item.percent * 100) : 0;
+  const percent = item?.payload?.percentage ?? 0;
 
   return (
     <div className="chart-tooltip">
