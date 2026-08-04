@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus, Filter, Search, Trash2, Edit, ArrowUpDown, Tag, SlidersHorizontal, X } from 'lucide-react';
 import { goalService } from '../services/goalService';
 import { validateGoal, goalCategories } from '../utils/validators/goalValidator';
+import GoalCharts from '../../charts/goals/GoalCharts';
 import '../styles/budget.css';
 import '../styles/goals.css';
 
@@ -499,6 +500,15 @@ function GoalsPage() {
           })
         )}
       </div>
+
+        {!loading && filteredGoals.length > 0 && (
+          <div className="income-charts-section">
+            <GoalCharts data={filteredGoals.map((goal) => ({
+              ...goal,
+              status: mapGoalStatus(goal),
+            }))} />
+          </div>
+        )}
       </section>
 
       {showModal && (
