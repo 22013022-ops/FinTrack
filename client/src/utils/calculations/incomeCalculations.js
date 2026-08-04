@@ -1,5 +1,62 @@
 // Reusable income aggregates; future finance modules can follow this module-per-domain pattern.
-export const calculateIncomeSummary = (records) => { const amounts = records.map((record) => Number(record.amount)); const total = amounts.reduce((sum, amount) => sum + amount, 0); return { total, count: records.length, highest: amounts.length ? Math.max(...amounts) : 0, average: amounts.length ? total / amounts.length : 0 }; };
+//1.Summary
+export const calculateIncomeSummary = (records = []) => {
+    const safeRecords = Array.isArray(records) ? records : [];
+    const amounts = safeRecords.map((record) => Number(record.amount));
+    const total = amounts.reduce((sum, amount) => sum + amount, 0);
+
+    return { total, count: safeRecords.length, highest: amounts.length ? Math.max(...amounts) : 0, average: amounts.length ? total / amounts.length : 0 };
+};
+
+//2. Formatting
 export const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount || 0);
+
 export const formatDate = (date) => new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date));
+
 export const getMonthLabel = (month) => new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(new Date(`${month}-01T00:00:00`));
+
+
+//3. Chart Data
+export const buildIncomeSourcesChartData = (records = []) => {
+    const safeRecords = Array.isArray(records) ? records : [];
+    const totals = safeRecords.reduce((accumulator, record) => {
+        const category = record.category || 'Other';
+        const amount = Number(record.amount) || 0;
+        accumulator[category] = (accumulator[category] || 0) + amount;
+        return accumulator;
+    }, {});
+
+    return Object.entries(totals)
+        .map(([name, value]) => ({ name, value }))
+        .sort((left, right) => right.value - left.value);
+};
+
+export const buildIncomeFrequencyChartData = (records = [], month = '') => {
+    const safeRecords = Array.isArray(records) ? records : [];
+
+    if (!month) {
+        return [];
+    }
+
+    const [year, monthNumber] = month.split('-').map(Number);
+    if (Number.isNaN(year) || Number.isNaN(monthNumber)) {
+        return [];
+    }
+
+    const daysInMonth = new Date(year, monthNumber, 0).getDate();
+    const weekCount = Math.max(1, Math.ceil(daysInMonth / 7));
+    const counts = Array.from({ length: weekCount }, () => 0);
+
+    safeRecords.forEach((record) => {
+        const date = new Date(record.date);
+        if (Number.isNaN(date.getTime())) {
+            return;
+        }
+
+        const day = date.getDate();
+        const weekIndex = Math.min(Math.max(Math.ceil(day / 7), 1), weekCount) - 1;
+        counts[weekIndex] += 1;
+    });
+
+    return counts.map((value, index) => ({ name: `Week ${index + 1}`, value }));
+};

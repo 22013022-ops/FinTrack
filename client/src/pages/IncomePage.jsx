@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, CirclePlus, Edit3, IndianRupee, LoaderCircle, RefreshCw, SlidersHorizontal, Tag, Trash2, Type, WalletCards, X } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { incomeService } from '../services/incomeService';
-import { calculateIncomeSummary, formatCurrency, formatDate, getMonthLabel } from '../utils/calculations/incomeCalculations';
+import { buildIncomeFrequencyChartData, buildIncomeSourcesChartData, calculateIncomeSummary, formatCurrency, formatDate, getMonthLabel } from '../utils/calculations/incomeCalculations';
 import { validateIncome } from '../utils/validators/incomeValidator';
+import IncomeSourcesChart from '../../charts/income/IncomeSourcesChart';
 
 const categories = ['Salary', 'Freelancing', 'Business', 'Investments', 'Gift', 'Bonus', 'Other'];
 const initialForm = () => ({ category: '', amount: '', description: '', date: new Date().toISOString().slice(0, 10) });
@@ -45,7 +46,7 @@ export default function IncomePage() {
     try {
       // Fetch the complete selected month. Filters are applied only to the table view below.
       const { data } = await incomeService.list({ month, sort: filters.sort });
-      setRecords(data.income);
+      setRecords(Array.isArray(data?.income) ? data.income : []);
     } catch (error) {
       setToast({ type: 'error', text: error.response?.data?.message || 'Could not load income records.' });
     } finally {
@@ -69,6 +70,8 @@ export default function IncomePage() {
   }, [toast]);
 
   const monthlySummary = useMemo(() => calculateIncomeSummary(records), [records]);
+  const incomeSourcesData = useMemo(() => buildIncomeSourcesChartData(records), [records]);
+  const incomeFrequencyData = useMemo(() => buildIncomeFrequencyChartData(records, month), [records, month]);
   const filteredRecords = useMemo(() => records.filter((record) => {
     const amount = Number(record.amount); const date = new Date(record.date);
     return (!filters.categories.length || filters.categories.includes(record.category))
@@ -247,6 +250,10 @@ export default function IncomePage() {
             </section>
           </>
         )}
+      </section>
+
+      <section className="income-charts-section" aria-label="Income insights charts">
+        <IncomeSourcesChart data={incomeSourcesData} frequencyData={incomeFrequencyData} />
       </section>
 
       {modal?.type === 'form' && <IncomeModal income={modal.income} onClose={() => setModal(null)} onSave={save} />}
