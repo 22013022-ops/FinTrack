@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, CirclePlus, Edit3, IndianRupee, LoaderCircle, RefreshCw, SlidersHorizontal, Tag, Trash2, Type, WalletCards, X } from 'lucide-react';
 import Button from '../components/ui/Button';
+import BudgetCharts from '../../charts/budget/BudgetCharts';
 import '../styles/budget.css';
 import { budgetService } from '../services/budgetService';
 import { expenseService } from '../services/expenseService';
@@ -177,6 +178,11 @@ export default function BudgetPage() {
   const isEmptyMonth = !loading && filteredBudgets.length === 0 && !hasFilters;
   const isNoMatch = !loading && filteredBudgets.length === 0 && hasFilters;
 
+  const chartData = useMemo(() => budgetCards.map((budget) => ({
+    ...budget,
+    status: budget.usagePercentage >= 100 ? 'exceeded' : budget.usagePercentage >= 80 ? 'near' : 'within',
+  })), [budgetCards]);
+
   const save = async (values, id) => {
     const error = validateBudget(values);
     if (error) throw new Error(error);
@@ -272,6 +278,7 @@ export default function BudgetPage() {
               {paginatedCards.map((budget) => {
                 const usageLabel = budget.usagePercentage >= 100 ? 'Exceeded' : budget.usagePercentage >= 80 ? 'Near limit' : 'Within limit';
                 const progressColor = budget.usagePercentage >= 100 ? 'budget-danger' : budget.usagePercentage >= 80 ? 'budget-warning' : 'budget-safe';
+
                 return (
                   <article className={`budget-card premium ${progressColor}`} key={budget._id}>
                     <div className="budget-card-header">
@@ -289,7 +296,9 @@ export default function BudgetPage() {
                       <div className="budget-percentage"><strong>{budget.usagePercentage.toFixed(0)}%</strong></div>
                       <div className="budget-status">{usageLabel}</div>
                     </div>
-                    <div className="progress-bar"><div style={{ width: `${Math.min(budget.usagePercentage, 100)}%` }} className={`progress-fill ${progressColor}`} /></div>
+                    <div className="progress-bar">
+                      <div style={{ width: `${Math.min(budget.usagePercentage, 100)}%` }} className={`progress-fill ${progressColor}`} />
+                    </div>
                     <div className="budget-card-actions">
                       <button onClick={() => setModal({ type: 'form', budget })} aria-label="Edit budget"><Edit3 size={16} /></button>
                       <button className="delete-button" onClick={() => setModal({ type: 'delete', budget })} aria-label="Delete budget"><Trash2 size={16} /></button>
@@ -298,7 +307,20 @@ export default function BudgetPage() {
                 );
               })}
             </div>
-            {filteredBudgets.length > pageSize && <nav className="table-pagination" aria-label="Budget pagination"><button type="button" disabled={currentPage === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>Previous</button><span>Page <b>{currentPage}</b> of <b>{totalPages}</b></span><button type="button" disabled={currentPage === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>Next</button></nav>}
+
+            {!loading && !isEmptyMonth && !isNoMatch && filteredBudgets.length > 0 && (
+              <div className="income-charts-section">
+                <BudgetCharts data={chartData} />
+              </div>
+            )}
+
+            {filteredBudgets.length > pageSize && (
+              <nav className="table-pagination" aria-label="Budget pagination">
+                <button type="button" disabled={currentPage === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>Previous</button>
+                <span>Page <b>{currentPage}</b> of <b>{totalPages}</b></span>
+                <button type="button" disabled={currentPage === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>Next</button>
+              </nav>
+            )}
           </>
         )}
       </section>
