@@ -1,9 +1,69 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, CirclePlus, Edit3, IndianRupee, LoaderCircle, RefreshCw, SlidersHorizontal, Tag, Trash2, Type, WalletCards, X } from 'lucide-react';
 import Button from '../components/ui/Button';
+import ExpenseCategoriesChart from '../../charts/expenses/ExpenseCategoriesChart';
 import { expenseService } from '../services/expenseService';
 import { calculateExpenseSummary, formatCurrency, formatDate, getMonthLabel } from '../utils/calculations/expenseCalculations';
 import { validateExpense, expenseCategories } from '../utils/validators/expenseValidator';
+
+const buildExpenseComparisonChartData = (records = []) => {
+  const totals = (Array.isArray(records) ? records : []).reduce((accumulator, record) => {
+    const category = record.category || 'Other';
+    const amount = Number(record.amount) || 0;
+    accumulator[category] = (accumulator[category] || 0) + amount;
+    return accumulator;
+  }, {});
+
+  return Object.entries(totals)
+    .map(([name, value]) => ({ name, value }))
+    .sort((left, right) => right.value - left.value);
+};
+
+const buildExpenseFrequencyChartData = (records = [], month = '') => {
+  const safeRecords = Array.isArray(records) ? records : [];
+  if (!month) return [];
+
+  const [year, monthNumber] = month.split('-').map(Number);
+  if (Number.isNaN(year) || Number.isNaN(monthNumber)) return [];
+
+  const daysInMonth = new Date(year, monthNumber, 0).getDate();
+  const weekCount = Math.max(1, Math.ceil(daysInMonth / 7));
+  const counts = Array.from({ length: weekCount }, () => 0);
+
+  safeRecords.forEach((record) => {
+    const date = new Date(record.date);
+    if (Number.isNaN(date.getTime())) return;
+
+    const day = date.getDate();
+    const weekIndex = Math.min(Math.max(Math.ceil(day / 7), 1), weekCount) - 1;
+    counts[weekIndex] += 1;
+  });
+
+  return counts.map((value, index) => ({ name: `Week ${index + 1}`, value }));
+};
+
+const buildWeeklyExpenseAmountChartData = (records = [], month = '') => {
+  const safeRecords = Array.isArray(records) ? records : [];
+  if (!month) return [];
+
+  const [year, monthNumber] = month.split('-').map(Number);
+  if (Number.isNaN(year) || Number.isNaN(monthNumber)) return [];
+
+  const daysInMonth = new Date(year, monthNumber, 0).getDate();
+  const weekCount = Math.max(1, Math.ceil(daysInMonth / 7));
+  const totals = Array.from({ length: weekCount }, () => 0);
+
+  safeRecords.forEach((record) => {
+    const date = new Date(record.date);
+    if (Number.isNaN(date.getTime())) return;
+
+    const day = date.getDate();
+    const weekIndex = Math.min(Math.max(Math.ceil(day / 7), 1), weekCount) - 1;
+    totals[weekIndex] += Number(record.amount) || 0;
+  });
+
+  return totals.map((value, index) => ({ name: `Week ${index + 1}`, value }));
+};
 
 const initialForm = () => ({ category: '', amount: '', description: '', date: new Date().toISOString().slice(0, 10) });
 const initialFilters = { categories: [], description: '', amountMin: '', amountMax: '', dateFrom: '', dateTo: '', sort: 'latest' };
@@ -67,6 +127,9 @@ export default function ExpensesPage() {
   }, [toast]);
 
   const monthlySummary = useMemo(() => calculateExpenseSummary(records), [records]);
+  const expenseCategoriesData = useMemo(() => buildExpenseComparisonChartData(records), [records]);
+  const expenseFrequencyData = useMemo(() => buildExpenseFrequencyChartData(records, month), [records, month]);
+  const weeklyExpenseAmountData = useMemo(() => buildWeeklyExpenseAmountChartData(records, month), [records, month]);
   const filteredRecords = useMemo(() => records.filter((record) => {
     const amount = Number(record.amount);
     const date = new Date(record.date);
@@ -246,6 +309,15 @@ export default function ExpensesPage() {
             </section>
           </>
         )}
+      </section>
+
+      <section className="income-charts-section" aria-label="Expense insights charts">
+        <ExpenseCategoriesChart
+          data={expenseCategoriesData}
+          comparisonData={expenseCategoriesData}
+          frequencyData={expenseFrequencyData}
+          weeklyAmountData={weeklyExpenseAmountData}
+        />
       </section>
 
       {modal?.type === 'form' && <ExpenseModal expense={modal.expense} onClose={() => setModal(null)} onSave={save} />}
