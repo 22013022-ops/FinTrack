@@ -46,6 +46,7 @@
 .income-legend-item strong{font-size:13px;color:#112250}
 .chart-insight{margin:0;padding:10px 12px;border-radius:12px;background:#f7fafc;border:1px solid #e8edf2;color:#3b5078;font-size:13px;line-height:1.45}
 .income-chart-empty{height:240px;border:1px dashed #d4dbe3;border-radius:16px;background:linear-gradient(135deg,#f8fafc 0%,#f3f6f8 100%);display:grid;place-items:center;padding:24px;text-align:center;color:#5f6e82}
+.income-comparison-chart{width:100%;height:280px}
 .chart-tooltip{background:#112250;border:1px solid #243e6b;border-radius:12px;padding:10px 12px;color:#fff;box-shadow:0 12px 25px #11225030;transition:none;transform:none}
 .chart-tooltip-label{margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1.3px;color:#9db3cf}
 .chart-tooltip-value{margin:0;font-size:14px;font-weight:700}

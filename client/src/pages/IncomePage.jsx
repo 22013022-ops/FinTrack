@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, CirclePlus, Edit3, IndianRupee, LoaderCircle, RefreshCw, SlidersHorizontal, Tag, Trash2, Type, WalletCards, X } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { incomeService } from '../services/incomeService';
-import { buildIncomeSourcesChartData, calculateIncomeSummary, formatCurrency, formatDate, getMonthLabel } from '../utils/calculations/incomeCalculations';
+import { buildIncomeFrequencyChartData, buildIncomeSourcesChartData, calculateIncomeSummary, formatCurrency, formatDate, getMonthLabel } from '../utils/calculations/incomeCalculations';
 import { validateIncome } from '../utils/validators/incomeValidator';
 import IncomeSourcesChart from '../../charts/income/IncomeSourcesChart';
 
@@ -71,6 +71,7 @@ export default function IncomePage() {
 
   const monthlySummary = useMemo(() => calculateIncomeSummary(records), [records]);
   const incomeSourcesData = useMemo(() => buildIncomeSourcesChartData(records), [records]);
+  const incomeFrequencyData = useMemo(() => buildIncomeFrequencyChartData(records, month), [records, month]);
   const filteredRecords = useMemo(() => records.filter((record) => {
     const amount = Number(record.amount); const date = new Date(record.date);
     return (!filters.categories.length || filters.categories.includes(record.category))
@@ -252,7 +253,7 @@ export default function IncomePage() {
       </section>
 
       <section className="income-charts-section" aria-label="Income insights charts">
-        <IncomeSourcesChart data={incomeSourcesData} />
+        <IncomeSourcesChart data={incomeSourcesData} frequencyData={incomeFrequencyData} />
       </section>
 
       {modal?.type === 'form' && <IncomeModal income={modal.income} onClose={() => setModal(null)} onSave={save} />}

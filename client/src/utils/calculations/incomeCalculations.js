@@ -30,3 +30,33 @@ export const buildIncomeSourcesChartData = (records = []) => {
         .map(([name, value]) => ({ name, value }))
         .sort((left, right) => right.value - left.value);
 };
+
+export const buildIncomeFrequencyChartData = (records = [], month = '') => {
+    const safeRecords = Array.isArray(records) ? records : [];
+
+    if (!month) {
+        return [];
+    }
+
+    const [year, monthNumber] = month.split('-').map(Number);
+    if (Number.isNaN(year) || Number.isNaN(monthNumber)) {
+        return [];
+    }
+
+    const daysInMonth = new Date(year, monthNumber, 0).getDate();
+    const weekCount = Math.max(1, Math.ceil(daysInMonth / 7));
+    const counts = Array.from({ length: weekCount }, () => 0);
+
+    safeRecords.forEach((record) => {
+        const date = new Date(record.date);
+        if (Number.isNaN(date.getTime())) {
+            return;
+        }
+
+        const day = date.getDate();
+        const weekIndex = Math.min(Math.max(Math.ceil(day / 7), 1), weekCount) - 1;
+        counts[weekIndex] += 1;
+    });
+
+    return counts.map((value, index) => ({ name: `Week ${index + 1}`, value }));
+};
