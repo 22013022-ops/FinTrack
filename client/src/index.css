@@ -24,3 +24,31 @@
 .income-page .income-action-row{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:14px!important}.income-page .income-action-row .primary-action{align-self:flex-start!important;margin:0!important}.income-page .month-selection-row{display:flex!important;align-items:center!important;justify-content:flex-start!important;width:auto!important;gap:14px!important}.income-page .month-heading{width:170px!important;text-align:center!important}@media(max-width:600px){.income-page .month-selection-row{align-items:flex-start!important;flex-direction:column!important}.income-page .month-heading{width:220px!important}}
 .income-page .month-selection-row{position:relative!important;width:100%!important;min-height:42px!important}.income-page .month-heading{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:auto!important;min-width:190px!important;z-index:1}.income-page .month-selection-row .month-toolbar{position:relative!important;z-index:2}@media(max-width:600px){.income-page .month-selection-row{min-height:112px!important}.income-page .month-heading{top:0!important;transform:translateX(-50%)!important}.income-page .month-selection-row .month-toolbar{margin-top:56px!important}}
 .income-page .month-heading{top:42%!important}.income-page .month-heading strong{font-size:27px!important;letter-spacing:-.8px!important}.income-page .month-heading span{font-size:11px!important}
+.income-charts-section{display:grid;gap:18px;margin-top:24px}
+.chart-card{background:#fff;border:1px solid #e2e2dd;border-radius:22px;padding:20px 20px 16px;box-shadow:0 6px 20px #1122500a}
+.chart-card-header{margin-bottom:12px}
+.chart-card-header h3{margin:0 0 6px;color:#112250;font-size:18px;letter-spacing:-.4px}
+.chart-card-header p{margin:0;color:#6e7b8e;font-size:13px;line-height:1.45}
+.chart-card-body{min-height:auto}
+.income-chart-shell{display:flex;flex-direction:column;gap:12px;width:100%}
+.income-chart-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(260px,0.85fr);gap:16px;align-items:center;width:100%}
+.income-chart-visual{position:relative;display:flex;align-items:center;justify-content:center;width:100%;min-height:250px;padding:8px 0}
+.income-chart-visual .recharts-surface{display:block;overflow:visible}
+.income-chart-center{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.income-chart-center strong{font-size:20px;letter-spacing:-.7px;color:#112250}
+.income-chart-center span{font-size:11px;text-transform:uppercase;letter-spacing:1.3px;color:#6e7b8e;margin-top:4px}
+.income-chart-legend{display:grid;gap:8px;padding:6px 0}
+.income-legend-item{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:8px 10px;border:1px solid #edf0ed;border-radius:11px;background:#fbfcfd}
+.income-legend-bullet{width:9px;height:9px;border-radius:50%}
+.income-legend-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+.income-legend-copy span{font-size:13px;font-weight:700;color:#112250}
+.income-legend-copy small{font-size:12px;color:#6e7b8e}
+.income-legend-item strong{font-size:13px;color:#112250}
+.chart-insight{margin:0;padding:10px 12px;border-radius:12px;background:#f7fafc;border:1px solid #e8edf2;color:#3b5078;font-size:13px;line-height:1.45}
+.income-chart-empty{height:240px;border:1px dashed #d4dbe3;border-radius:16px;background:linear-gradient(135deg,#f8fafc 0%,#f3f6f8 100%);display:grid;place-items:center;padding:24px;text-align:center;color:#5f6e82}
+.chart-tooltip{background:#112250;border:1px solid #243e6b;border-radius:12px;padding:10px 12px;color:#fff;box-shadow:0 12px 25px #11225030}
+.chart-tooltip-label{margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1.3px;color:#9db3cf}
+.chart-tooltip-value{margin:0;font-size:14px;font-weight:700}
+.chart-tooltip-meta{margin:6px 0 0;font-size:12px;color:#d8e5f7}
+@media(max-width:900px){.income-chart-layout{grid-template-columns:1fr}.income-chart-legend{padding-top:4px}}
+@media(max-width:600px){.chart-card{padding:18px 16px 14px}.income-chart-visual{min-height:210px}.income-chart-center strong{font-size:18px}.income-legend-item{padding:8px}.income-legend-copy span{font-size:12px}.income-legend-copy small{font-size:11px}.income-legend-item strong{font-size:12px}}
