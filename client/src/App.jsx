@@ -7,6 +7,7 @@ import IncomePage from './pages/IncomePage';
 import ExpensesPage from './pages/ExpensesPage';
 import BudgetPage from './pages/BudgetPage';
 import GoalsPage from './pages/GoalsPage';
+import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
@@ -17,7 +18,7 @@ function AppRoutes() {
     <Route path="/" element={<LandingPage />} />
     <Route path="/login" element={user ? <Navigate to="/app/income" replace /> : <AuthPage mode="login" />} />
     <Route path="/signup" element={user ? <Navigate to="/app/income" replace /> : <AuthPage mode="signup" />} />
-    <Route element={<ProtectedRoute />}><Route path="/app" element={<AppLayout />}><Route index element={<Navigate to="income" replace />} /><Route path="income" element={<IncomePage />} /><Route path="expenses" element={<ExpensesPage />} /><Route path="budget" element={<BudgetPage />} /><Route path="goals" element={<GoalsPage />} /><Route path=":section" element={<PlaceholderPage />} /></Route></Route>
+    <Route element={<ProtectedRoute />}><Route path="/app" element={<AppLayout />}><Route index element={<Navigate to="income" replace />} /><Route path="income" element={<IncomePage />} /><Route path="expenses" element={<ExpensesPage />} /><Route path="budget" element={<BudgetPage />} /><Route path="goals" element={<GoalsPage />} /><Route path="dashboard" element={<DashboardPage />} /><Route path=":section" element={<PlaceholderPage />} /></Route></Route>
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>;
 }
