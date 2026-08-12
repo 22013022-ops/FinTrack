@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDownRight, ArrowUpRight, CalendarDays, ChevronLeft, ChevronRight, CircleDollarSign, Lightbulb, LoaderCircle, PiggyBank, RefreshCw, Sparkles, TrendingUp, WalletCards } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, CalendarDays, ChevronLeft, ChevronRight, CircleDollarSign, Lightbulb, LoaderCircle, PiggyBank, RefreshCw, TrendingUp, WalletCards } from 'lucide-react';
 import { incomeService } from '../services/incomeService';
 import { expenseService } from '../services/expenseService';
 import { dashboardService } from '../services/dashboardService';
@@ -138,7 +138,6 @@ export default function DashboardPage() {
     <section className="dashboard-insights" aria-labelledby="ai-insights-title">
       <header className="dashboard-insights-header">
         <div><span>AI FINANCIAL INSIGHTS</span><h2 id="ai-insights-title">Your {getMonthLabel(month)} insights</h2><p>Placeholder guidance for your selected month.</p></div>
-        <i aria-hidden="true"><Sparkles size={20} /></i>
       </header>
       <div className="dashboard-insights-grid">
         <article className="dashboard-insight-card">
