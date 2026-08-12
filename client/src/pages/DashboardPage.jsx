@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDownRight, ArrowUpRight, CalendarDays, ChevronLeft, ChevronRight, CircleDollarSign, LoaderCircle, PiggyBank, RefreshCw, WalletCards } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, CalendarDays, ChevronLeft, ChevronRight, CircleDollarSign, Lightbulb, LoaderCircle, PiggyBank, RefreshCw, Sparkles, TrendingUp, WalletCards } from 'lucide-react';
 import { incomeService } from '../services/incomeService';
 import { expenseService } from '../services/expenseService';
 import { dashboardService } from '../services/dashboardService';
@@ -9,6 +9,7 @@ import MonthlySavingsTrendChart from '../../charts/dashboard/MonthlySavingsTrend
 import ExpenseCategoryTrendChart from '../../charts/dashboard/ExpenseCategoryTrendChart';
 import IncomeSourceTrendChart from '../../charts/dashboard/IncomeSourceTrendChart';
 import '../styles/dashboard.css';
+import '../styles/dashboardInsights.css';
 
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const monthKey = (date) => date.toISOString().slice(0, 7);
@@ -133,6 +134,23 @@ export default function DashboardPage() {
         const ChangeIcon = change.Icon;
         return <article key={label}><div className="dashboard-card-top"><span>{label}</span><i><Icon size={19} /></i></div><strong>{formatCurrency(value)}</strong>{meta && <small className="dashboard-card-meta">{meta}</small>}<p className={`dashboard-comparison ${change.tone}`}>{ChangeIcon && <ChangeIcon size={15} />}{change.text}</p></article>;
       })}</section>}
+
+    <section className="dashboard-insights" aria-labelledby="ai-insights-title">
+      <header className="dashboard-insights-header">
+        <div><span>AI FINANCIAL INSIGHTS</span><h2 id="ai-insights-title">Your {getMonthLabel(month)} insights</h2><p>Placeholder guidance for your selected month.</p></div>
+        <i aria-hidden="true"><Sparkles size={20} /></i>
+      </header>
+      <div className="dashboard-insights-grid">
+        <article className="dashboard-insight-card">
+          <i className="dashboard-insight-icon suggestion" aria-hidden="true"><Lightbulb size={19} /></i>
+          <div><span>SUGGESTION</span><h3>Set aside a little more for savings</h3><p>Placeholder suggestion: consider moving a small amount into your savings after covering this month’s essentials.</p></div>
+        </article>
+        <article className="dashboard-insight-card">
+          <i className="dashboard-insight-icon improvement" aria-hidden="true"><TrendingUp size={19} /></i>
+          <div><span>IMPROVEMENT</span><h3>Review recurring spending</h3><p>Placeholder improvement: review regular expenses to identify one area where you could reduce monthly spending.</p></div>
+        </article>
+      </div>
+    </section>
 
     <DashboardChartSection title={`${selectedYear} Financial Trends`} subtitle="Your financial trends across the year" charts={[]}>
       {yearlyError ? <div className="dashboard-chart-error">{yearlyError}</div> : <IncomeSourceTrendChart data={yearlyData.months} sources={yearlyData.incomeSources} year={selectedYear} loading={yearlyLoading} />}
