@@ -1,0 +1,8 @@
+@media (min-width: 901px) {
+  .landing.landing-redesign {
+    display: block;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+}
