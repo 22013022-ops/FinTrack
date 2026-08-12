@@ -50,6 +50,9 @@ export default function DashboardPage() {
   const [yearlyData, setYearlyData] = useState({ months: [], expenseCategories: [], incomeSources: [] });
   const [yearlyLoading, setYearlyLoading] = useState(true);
   const [yearlyError, setYearlyError] = useState('');
+  const [insights, setInsights] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState('');
   const yearlyCache = useRef(new Map());
   const [selectedYear, selectedMonth] = month.split('-').map(Number);
   const years = Array.from({ length: 17 }, (_, index) => new Date().getFullYear() - 8 + index);
@@ -116,6 +119,16 @@ export default function DashboardPage() {
   }, [data]);
 
   const changeMonth = (nextMonth) => setMonth(nextMonth);
+  const generateInsights = async () => {
+    setInsightsLoading(true); setInsightsError('');
+    try {
+      const { data: response } = await dashboardService.generateInsights(month);
+      setInsights({ month: response.month, ...response.insights });
+    } catch (requestError) {
+      setInsightsError(requestError.response?.data?.message || 'Could not generate AI insights right now.');
+    } finally { setInsightsLoading(false); }
+  };
+  const visibleInsights = insights?.month === month ? insights : null;
   return <div className="page dashboard-page">
     <header className="page-header dashboard-header"><div><p className="eyebrow">PERSONAL FINANCE</p><h1>Dashboard</h1><p>Overall financial overview</p></div></header>
 
@@ -137,18 +150,22 @@ export default function DashboardPage() {
 
     <section className="dashboard-insights" aria-labelledby="ai-insights-title">
       <header className="dashboard-insights-header">
-        <div><span>AI FINANCIAL INSIGHTS</span><h2 id="ai-insights-title">Your {getMonthLabel(month)} insights</h2><p>Placeholder guidance for your selected month.</p></div>
+        <div><span>AI FINANCIAL INSIGHTS</span><h2 id="ai-insights-title">Your {getMonthLabel(month)} insights</h2><p>{visibleInsights ? 'Fresh, personalized guidance based on your financial summary.' : 'Generate personalized suggestions for your selected month.'}</p></div>
+        <button type="button" className="button dashboard-insights-button" onClick={generateInsights} disabled={insightsLoading}>
+          {insightsLoading ? <><LoaderCircle size={17} /> Generating…</> : 'Generate Insights'}
+        </button>
       </header>
-      <div className="dashboard-insights-grid">
+      {insightsError && <div className="error-banner dashboard-insights-error" role="alert">{insightsError}</div>}
+      {(insightsLoading || visibleInsights) && <div className="dashboard-insights-grid">
         <article className="dashboard-insight-card">
           <i className="dashboard-insight-icon suggestion" aria-hidden="true"><Lightbulb size={19} /></i>
-          <div><span>SUGGESTION</span><h3>Set aside a little more for savings</h3><p>Placeholder suggestion: consider moving a small amount into your savings after covering this month’s essentials.</p></div>
+          <div><span>SUGGESTIONS</span>{insightsLoading ? <><h3>Generating your suggestions…</h3><p>Reviewing your selected-month financial summary and year-to-date trends.</p></> : <InsightList items={visibleInsights?.suggestions} />}</div>
         </article>
         <article className="dashboard-insight-card">
           <i className="dashboard-insight-icon improvement" aria-hidden="true"><TrendingUp size={19} /></i>
-          <div><span>IMPROVEMENT</span><h3>Review recurring spending</h3><p>Placeholder improvement: review regular expenses to identify one area where you could reduce monthly spending.</p></div>
+          <div><span>IMPROVEMENTS</span>{insightsLoading ? <><h3>Identifying improvements…</h3><p>Comparing income, spending, budgets, and goals from January through this month.</p></> : <InsightList items={visibleInsights?.improvements} />}</div>
         </article>
-      </div>
+      </div>}
     </section>
 
     <DashboardChartSection title={`${selectedYear} Financial Trends`} subtitle="Your financial trends across the year" charts={[]}>
@@ -165,4 +182,8 @@ function DashboardChartSection({ title, subtitle, charts, children }) {
     <header><div><h2>{title}</h2><p>{subtitle}</p></div></header>
     <div className="dashboard-chart-grid">{children}{charts.map((chart) => <article className="dashboard-chart-placeholder" key={chart}><div><span>CHART PLACEHOLDER</span><h3>{chart}</h3></div></article>)}</div>
   </section>;
+}
+
+function InsightList({ items = [] }) {
+  return <ul className="dashboard-insight-list">{items.map((item, index) => <li key={`${item.title}-${index}`}><strong>{item.title}</strong><p>→ <em>{item.reason}</em></p></li>)}</ul>;
 }
