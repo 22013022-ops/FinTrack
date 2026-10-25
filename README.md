@@ -1,72 +1,127 @@
 # FinTrack
 
-FinTrack is a React and Express personal-finance application. The current backend module implements secure, JWT-based user authentication; finance data endpoints are intentionally not included yet.
+FinTrack is a personal finance tracker built with React, Vite, Express, and MongoDB. It lets signed-in users manage income, expenses, monthly budgets, and savings goals, and review their finances in a dashboard. Optional AI-generated dashboard insights use aggregated financial data.
+
+## Features
+
+- Sign up, log in, and restore an authenticated session with JWTs.
+- Record and filter monthly income and expenses, with category, amount, date, and description filters.
+- Create and manage monthly spending budgets by category.
+- Create savings goals and adjust their saved amounts.
+- View yearly income and expense trends in the dashboard.
+- Request monthly financial suggestions and progress insights through OpenRouter.
+- Keep financial records scoped to the authenticated user.
+
+## Requirements
+
+- Node.js and npm
+- A MongoDB database, local or hosted
+- An OpenRouter API key only if you want AI dashboard insights
 
 ## Run locally
 
-1. In `server/.env`, set `PORT`, `MONGO_URI`, `JWT_SECRET`, and `JWT_EXPIRES_IN`. Use `server/.env.example` as the safe template. `JWT_SECRET` should be a long, random value and `JWT_EXPIRES_IN` can be a duration such as `7d`.
-2. Start the API with `cd server && npm run dev`.
-3. Start the React app with `cd client && npm run dev`.
+1. Configure the API environment:
 
-The client defaults to `http://localhost:5000/api`. Override it with `VITE_API_URL` in a client environment file when deploying. The API accepts the frontend origin set by `CLIENT_URL` (default `http://localhost:5173`).
+   ```powershell
+   Copy-Item server/.env.example server/.env
+   ```
 
-## Authentication architecture
+   Edit `server/.env` and set `MONGO_URI`, `JWT_SECRET`, and `JWT_EXPIRES_IN`. The example file includes defaults for the API port and client origin. Set `OPENROUTER_API_KEY` to enable AI insights; it is optional for the rest of the app. Keep the real `.env` file private and do not commit secrets.
 
-### Server
+2. Install and start the API in a terminal:
 
-- `server/server.js` — Application entry point. It loads environment variables, configures CORS/JSON parsing, mounts the auth routes, and only starts listening after MongoDB connects.
-- `server/.env.example` — Safe configuration template. It documents required environment names without exposing credentials; the real `.env` remains local and is ignored by Git.
-- `server/config/db.js` — Database configuration. It opens the Mongoose connection from `MONGO_URI`, keeping infrastructure setup outside route code.
-- `server/models/User.js` — User persistence model. It lives in `models` because it maps MongoDB user documents and hashes passwords with bcrypt before they are stored.
-- `server/controllers/authController.js` — Authentication request handlers. Controllers receive route input, validate it, call the User model, and return login/signup/session responses.
-- `server/routes/authRoutes.js` — Authentication URL map. It connects `/api/auth/signup`, `/login`, and `/me` to controllers and protection middleware.
-- `server/middleware/authMiddleware.js` — Bearer-token guard. It verifies the JWT, loads the user, and passes the authenticated user to protected controllers.
-- `server/middleware/errorMiddleware.js` — Central error layer. It provides consistent 404 and server-error responses instead of duplicating error handling in every route.
-- `server/utils/token.js` — Token utility. It creates signed JWTs from `JWT_SECRET` and `JWT_EXPIRES_IN`, keeping secret-dependent logic reusable and isolated.
-- `server/utils/sendAuthResponse.js` — Response utility. It creates the token and returns only safe user fields for both signup and login.
+   ```powershell
+   cd server
+   npm install
+   npm run dev
+   ```
 
-### Client
+   The API listens on port `5000` by default and waits for MongoDB to connect before it starts. `npm start` runs the server without nodemon.
 
-- `client/src/services/api.js` — Shared Axios client. It is in `services` because it owns HTTP configuration and automatically attaches `Authorization: Bearer <token>` from localStorage.
-- `client/src/services/authService.js` — Auth API wrapper. UI components use its concise `signup`, `login`, and `getMe` methods rather than calling Axios directly.
-- `client/src/context/AuthContext.jsx` — Global session state. It restores a saved token through `/api/auth/me`, stores successful tokens, and makes login/signup/logout available to the UI.
-- `client/src/context/authStore.js` — Context definition. It is separate from the provider to keep React Fast Refresh boundaries clean.
-- `client/src/hooks/useAuth.js` — Auth-consumption hook. Components import this helper instead of knowing the context implementation details.
-- `client/src/components/auth/ProtectedRoute.jsx` — Route-level access control. It waits for session restoration and redirects unauthenticated visitors away from the app layout.
-- `client/src/App.jsx` — Route composition. It combines the auth provider with public, protected, and authenticated-only routes.
-- `client/src/pages/AuthPage.jsx` — Existing login/signup UI, now connected only through AuthContext; the visual design remains unchanged while it displays API errors and submit state.
-- `client/src/layouts/AppLayout.jsx` — Existing app shell, now calls AuthContext logout to clear the session before returning home.
+3. Install and start the web client in a second terminal:
 
-## API endpoints
+   ```powershell
+   cd client
+   npm install
+   npm run dev
+   ```
 
-- `POST /api/auth/signup` — Validates fields and email, hashes the password, creates the user, and returns a JWT plus safe user data.
-- `POST /api/auth/login` — Validates credentials with bcrypt and returns a JWT plus safe user data.
-- `GET /api/auth/me` — Protected route. Requires `Authorization: Bearer <token>` and restores the current user session.
+   Vite prints the local client URL, normally `http://localhost:5173`. The client calls `http://localhost:5000/api` by default. Set `VITE_API_URL` in a client environment file to use a different API base URL.
 
-## Income module
+## Environment configuration
 
-The Income module is the reference structure for Expenses, Budget, Goals, and Dashboard work. Every request uses the existing JWT middleware, and every data query is constrained to the authenticated user's ID.
+The API loads configuration from `server/.env`:
 
-- `server/models/Income.js` — Income persistence model. It owns the user reference, category, amount, optional description, date, timestamps, and compound user/date/category indexes for efficient month queries.
-- `server/controllers/incomeController.js` — Income business handlers. It validates payloads, builds user-scoped month/search/category queries, applies sorting, and prevents cross-user edits or deletes.
-- `server/routes/incomeRoutes.js` — Protected Income URL map. It applies `requireAuth` before exposing the CRUD controller actions.
-- `client/src/services/incomeService.js` — Income HTTP wrapper. It keeps Axios calls out of the page and uses the shared client for Bearer authentication.
-- `client/src/utils/calculations/incomeCalculations.js` — Income presentation calculations. It derives totals, count, highest amount, average amount, and standardises money/date/month formatting.
-- `client/src/utils/validators/incomeValidator.js` — Client form validator. It provides immediate, consistent category, amount, date, and description feedback before an API call.
-- `client/src/pages/IncomePage.jsx` — Responsive Income UI. It manages month navigation, query controls, loading/empty states, CRUD modals, and toast feedback while delegating data work to the service and utility layers.
+- `PORT` — API port; defaults to `5000`.
+- `MONGO_URI` — MongoDB connection string. Required.
+- `JWT_SECRET` — Secret used to sign authentication tokens. Required; use a long, random value.
+- `JWT_EXPIRES_IN` — Token lifetime, such as `7d`. Required.
+- `CLIENT_URL` — Allowed browser origin for CORS; defaults to `http://localhost:5173`.
+- `OPENROUTER_API_KEY` — Enables AI-generated insights. Optional.
 
-### Income API endpoints
+The Vite client reads `VITE_API_URL`; when unset, its API service uses `http://localhost:5000/api`.
 
-All endpoints require `Authorization: Bearer <token>`.
+## App pages
 
-- `POST /api/income` — Creates an income record for the current user. Requires `category`, positive `amount`, and `date`; `description` is optional.
-- `GET /api/income?month=YYYY-MM&description=&category=&amountMin=&amountMax=&dateFrom=&dateTo=&sort=latest` — Returns only the current user's records for the requested month. Supports category, description, amount range, date range, and `latest`, `oldest`, `highest`, or `lowest` sort orders.
-- `PUT /api/income/:id` — Validates and updates only a record belonging to the current user.
-- `DELETE /api/income/:id` — Deletes only a record belonging to the current user and returns `204 No Content`.
+- `/` — Landing page.
+- `/login` and `/signup` — Authentication pages.
+- `/app/income` — Income records.
+- `/app/expenses` — Expense records.
+- `/app/budget` — Monthly category budgets.
+- `/app/goals` — Savings goals.
+- `/app/dashboard` — Financial summaries, charts, and AI insights.
 
-### Income workflow
+All `/app` pages require an authenticated session.
 
-1. The protected Income route loads and sends the JWT through the shared Axios interceptor.
-2. The API verifies the JWT, attaches the user, and limits MongoDB reads/writes to that user.
-3. The page fetches the chosen month and recalculates summary cards from the returned database records.
-4. Adding, editing, or deleting uses the service layer, shows a toast result, and refreshes the current month without reloading the app.
+## API overview
+
+The API runs under `/api`. Except for health and authentication signup/login, endpoints require the header `Authorization: Bearer <token>`.
+
+- `GET /api/health` — Checks that the API process is responding.
+- `POST /api/auth/signup` — Creates an account.
+- `POST /api/auth/login` — Authenticates and returns a token.
+- `GET /api/auth/me` — Returns the signed-in user for session restoration.
+- `GET /api/income?month=YYYY-MM` — Lists income for a month. Supports `category`, `description`, `amountMin`, `amountMax`, `dateFrom`, `dateTo`, and `sort` filters.
+- `POST /api/income` — Creates an income record.
+- `PUT /api/income/:id` and `DELETE /api/income/:id` — Update or delete an income record.
+- `GET /api/expenses?month=YYYY-MM` — Lists expenses for a month. Supports the same filters as income.
+- `POST /api/expenses` — Creates an expense record.
+- `PUT /api/expenses/:id` and `DELETE /api/expenses/:id` — Update or delete an expense record.
+- `GET /api/budgets?month=YYYY-MM` — Lists budgets, optionally filtered by month.
+- `POST /api/budgets` — Creates a monthly category budget.
+- `PUT /api/budgets/:id` and `DELETE /api/budgets/:id` — Update or delete a budget.
+- `GET /api/goals` — Lists savings goals.
+- `POST /api/goals` — Creates a savings goal.
+- `PUT /api/goals/:id` and `DELETE /api/goals/:id` — Update or delete a goal.
+- `PUT /api/goals/:id/savings` — Adds to or subtracts from a goal's saved amount using an `amount` in the request body.
+- `GET /api/dashboard/yearly-income-expenses?year=YYYY` — Returns a 12-month income and expense series for a year.
+- `POST /api/ai/dashboard-insights` — Generates insights for a month; provide `{ "month": "YYYY-MM" }` in the request body. Requires `OPENROUTER_API_KEY`.
+
+Income and expense sorting accepts `latest`, `oldest`, `highest`, or `lowest`. Create and update requests validate their fields; records can only be accessed or changed by their owner.
+
+## Project structure
+
+- `client/` — React application, Vite configuration, pages, charts, shared API services, and styles.
+- `server/` — Express API, MongoDB models, authentication middleware, route handlers, and AI insight services.
+- `server/config/` — Database connection setup.
+- `server/controllers/` — Request validation and application logic for each API area.
+- `server/models/` — Mongoose schemas for users and finance records.
+- `server/routes/` — API route definitions.
+- `server/services/` — AI provider integration and aggregate financial summary builder.
+- `client/src/pages/` — Landing, authentication, and finance pages.
+- `client/src/services/` — API wrappers used by the client pages.
+
+## Client scripts
+
+Run these from `client/`:
+
+- `npm run dev` — Start the Vite development server.
+- `npm run build` — Build the production client into `client/dist/`.
+- `npm run preview` — Preview the production build locally.
+- `npm run lint` — Run ESLint.
+
+## Notes
+
+- AI insights are optional. Requests to `/api/ai/dashboard-insights` return a configuration error when `OPENROUTER_API_KEY` is missing.
+- Financial amounts are displayed as INR in the AI summary builder.
+- `server/.env` contains secrets and should remain untracked.
